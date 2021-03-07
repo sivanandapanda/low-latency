@@ -1,10 +1,6 @@
 package com.example;
 
-import com.example.core.Definition;
-import com.example.core.Producer;
-import com.example.io.SocketPublisher;
 import com.example.model.Element;
-import com.example.util.MetricsCollector;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,30 +13,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.model.Element.*;
+import static com.example.util.logging.LogLevel.DEBUG;
+
 //import static org.junit.jupiter.api.Assertions.*;
 
 class MainTest {
 
     @Test
     void publish_test() throws IOException, InterruptedException {
-        int frequencyInSec = 2;
+        Main main = new Main(9979, "localhost", DEBUG, 2, new Element[]{ABC, XYZ, LMN}, 50);
+        main.start();
 
-        SocketPublisher socketPublisher = new SocketPublisher(9989, "localhost");
+        TimeUnit.SECONDS.sleep(15);
 
-        Definition definition = new Definition(Element.values());
-
-        Producer producer = new Producer(frequencyInSec, definition, socketPublisher);
-
-        producer.start();
-
-        MetricsCollector metricsCollector = new MetricsCollector(frequencyInSec * 5, producer, definition, socketPublisher);
-        metricsCollector.start();
-
-        TimeUnit.SECONDS.sleep(10);
-
-        producer.stop();
-        socketPublisher.close();
-        metricsCollector.stop();
+        main.shutdown();
     }
 
     @Test
@@ -48,20 +35,12 @@ class MainTest {
         int port = 4445;
         new Thread(() -> {
             try {
-                int frequencyInSec = 2;
-
-                SocketPublisher socketPublisher = new SocketPublisher(port, "localhost");
-
-                Definition definition = new Definition(Element.values());
-
-                Producer producer = new Producer(frequencyInSec, definition, socketPublisher);
-
-                producer.start();
+                Main main = new Main(9979, "localhost", DEBUG, 2, Element.values(), 50);
+                main.start();
 
                 TimeUnit.SECONDS.sleep(10);
 
-                producer.stop();
-                socketPublisher.close();
+                main.shutdown();
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }

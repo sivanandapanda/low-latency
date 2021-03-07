@@ -1,10 +1,10 @@
 package com.example.core;
 
-import com.example.io.SocketPublisher;
 import com.example.model.DataElement;
 import com.example.model.Element;
+import com.example.util.logging.Logger;
 
-import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -16,18 +16,21 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Producer {
 
+    private final Logger logger;
     private final int frequency;
     private final Definition definition;
-    private final SocketPublisher publisher;
+    private final BlockingQueue<String> queue;
     private final ScheduledExecutorService scheduler;
 
+    private static final AtomicLong totalProducedCounter = new AtomicLong(0);
     private static final Map<Element, ExecutorService> publisherExecutorMap = new HashMap<>();
     private static final Map<Element, Map<String, AtomicLong>> elementCounterMap = new ConcurrentHashMap<>();
 
-    public Producer(int frequency, Definition definition, SocketPublisher publisher) {
+    public Producer(Logger logger, int frequency, Definition definition, BlockingQueue<String> queue) {
+        this.logger = logger;
         this.frequency = frequency;
         this.definition = definition;
-        this.publisher = publisher;
+        this.queue = queue;
 
         scheduler = Executors.newScheduledThreadPool(1);
         definition.getElements().forEach(e -> {
@@ -51,7 +54,7 @@ public class Producer {
 
         int frequency = definition.getFrequency(element);
 
-        //System.out.println(LocalTime.now() + " - " + Thread.currentThread().getName() + " : " + element + " with frequency " + frequency);
+        logger.debug(LocalDateTime.now(), element + " with frequency " + frequency);
 
         String time = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss"));
         Map<String, AtomicLong> counterMap = elementCounterMap.get(element);
@@ -61,17 +64,21 @@ public class Producer {
         for (int i = 0; i < frequency; i++) {
             String asJson = new DataElement(element, random.nextDouble() * randomMultiplier).asJson();
             try {
-                publisher.publish(asJson);
+                queue.put(asJson);
+                totalProducedCounter.incrementAndGet();
                 counter.incrementAndGet();
-            } catch (IOException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        counterMap.put(time, counter);
     }
 
     public Map<Element, Map<String, AtomicLong>> getElementCounterMap() {
         return Collections.unmodifiableMap(elementCounterMap);
+    }
+
+    public AtomicLong getTotalProducedCounter() {
+        return totalProducedCounter;
     }
 
     public void stop() {
