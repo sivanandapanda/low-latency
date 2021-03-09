@@ -32,7 +32,7 @@ public class SocketPublisher {
         this.logger = logger;
         this.queue = queue;
         channel = DatagramChannel.open();
-        channel.socket().bind(new InetSocketAddress(port));
+        channel.socket().bind(new InetSocketAddress(50000));
         channel.configureBlocking(false);
     }
 
