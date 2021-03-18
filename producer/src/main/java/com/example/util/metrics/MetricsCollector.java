@@ -2,7 +2,7 @@ package com.example.util.metrics;
 
 import com.example.core.Definition;
 import com.example.core.Producer;
-import com.example.io.SocketPublisher;
+import com.example.io.Publisher;
 import com.example.util.logging.Logger;
 
 import java.time.LocalDateTime;
@@ -20,17 +20,17 @@ public class MetricsCollector {
     private final int frequency;
     private final Producer producer;
     private final Definition definition;
-    private final SocketPublisher socketPublisher;
+    private final Publisher publisher;
     private final ScheduledExecutorService scheduler;
 
     Set<String> completedKeys = new HashSet<>();
 
-    public MetricsCollector(Logger logger, int frequency, Producer producer, Definition definition, SocketPublisher socketPublisher) {
+    public MetricsCollector(Logger logger, int frequency, Producer producer, Definition definition, Publisher publisher) {
         this.logger = logger;
         this.frequency = frequency;
         this.producer = producer;
         this.definition = definition;
-        this.socketPublisher = socketPublisher;
+        this.publisher = publisher;
         scheduler = Executors.newScheduledThreadPool(1);
     }
 
@@ -41,9 +41,9 @@ public class MetricsCollector {
     private void collect() {
         logger.info(LocalDateTime.now(), "Frequency => " + definition.getElementPublishFrequencyPerSec());
         logger.info(LocalDateTime.now(), "Total Produced => " + producer.getTotalProducedCounter());
-        logger.info(LocalDateTime.now(), "Total Published => " + socketPublisher.getTotalPublishedCounter());
+        logger.info(LocalDateTime.now(), "Total Published => " + publisher.getTotalPublishedCounter());
         logger.info(LocalDateTime.now(), "Published Stats at = " + LocalTime.now() + "=======================");
-        String publisherMetrics = socketPublisher.getCounterMap().entrySet().stream()
+        String publisherMetrics = publisher.getCounterMap().entrySet().stream()
                 .filter(e -> !completedKeys.contains(e.getKey()))
                 .map(e -> e.getKey() + "=" + e.getValue())
                 .collect(Collectors.joining(", "));
@@ -58,7 +58,7 @@ public class MetricsCollector {
         });
         logger.info(LocalDateTime.now(), "======================================");
 
-        socketPublisher.getCounterMap().forEach((k, v) -> completedKeys.add(k));
+        publisher.getCounterMap().forEach((k, v) -> completedKeys.add(k));
         producer.getElementCounterMap().forEach((element, counterMap) -> counterMap.forEach((k, v) -> completedKeys.add(k)));
     }
 

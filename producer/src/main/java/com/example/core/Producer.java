@@ -14,23 +14,20 @@ import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Producer {
+public abstract class Producer {
+    protected final Logger logger;
+    protected final int frequency;
+    protected final Definition definition;
+    protected final ScheduledExecutorService scheduler;
 
-    private final Logger logger;
-    private final int frequency;
-    private final Definition definition;
-    private final BlockingQueue<String> queue;
-    private final ScheduledExecutorService scheduler;
+    protected static final AtomicLong totalProducedCounter = new AtomicLong(0);
+    protected static final Map<Element, ExecutorService> publisherExecutorMap = new HashMap<>();
+    protected static final Map<Element, Map<String, AtomicLong>> elementCounterMap = new ConcurrentHashMap<>();
 
-    private static final AtomicLong totalProducedCounter = new AtomicLong(0);
-    private static final Map<Element, ExecutorService> publisherExecutorMap = new HashMap<>();
-    private static final Map<Element, Map<String, AtomicLong>> elementCounterMap = new ConcurrentHashMap<>();
-
-    public Producer(Logger logger, int frequency, Definition definition, BlockingQueue<String> queue) {
+    public Producer(Logger logger, int frequency, Definition definition) {
         this.logger = logger;
         this.frequency = frequency;
         this.definition = definition;
-        this.queue = queue;
 
         scheduler = Executors.newScheduledThreadPool(1);
         definition.getElements().forEach(e -> {
@@ -64,13 +61,18 @@ public class Producer {
         for (int i = 0; i < frequency; i++) {
             String asJson = new DataElement(element, random.nextDouble() * randomMultiplier).asJson();
             try {
-                queue.put(asJson);
+                publish(asJson);
                 totalProducedCounter.incrementAndGet();
                 counter.incrementAndGet();
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void stop() {
+        scheduler.shutdownNow();
+        publisherExecutorMap.values().forEach(ExecutorService::shutdownNow);
     }
 
     public Map<Element, Map<String, AtomicLong>> getElementCounterMap() {
@@ -81,8 +83,6 @@ public class Producer {
         return totalProducedCounter;
     }
 
-    public void stop() {
-        scheduler.shutdownNow();
-        publisherExecutorMap.values().forEach(ExecutorService::shutdownNow);
-    }
+    abstract void publish(String json) throws InterruptedException;
+
 }
