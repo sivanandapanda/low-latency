@@ -83,6 +83,6 @@ public abstract class Producer {
         return totalProducedCounter;
     }
 
-    abstract void publish(String json) throws InterruptedException;
+    public abstract void publish(String json) throws InterruptedException;
 
 }

@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
 
-public class BlockingQueuePublisher extends Publisher {
+public class QueuePublisher extends Publisher {
 
     private final BlockingQueue<String> queue;
 
-    public BlockingQueuePublisher(int port, String host, Logger logger, BlockingQueue<String> queue) throws IOException {
+    public QueuePublisher(int port, String host, Logger logger, BlockingQueue<String> queue) throws IOException {
         super(port, host, logger);
         this.queue = queue;
     }

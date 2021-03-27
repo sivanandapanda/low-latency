@@ -2,6 +2,7 @@ package com.example;
 
 import com.example.model.Element;
 import com.example.model.RunMode;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -15,15 +16,15 @@ import java.util.OptionalDouble;
 import java.util.concurrent.*;
 
 import static com.example.model.Element.*;
-import static com.example.model.RunMode.DIRECT;
-import static com.example.model.RunMode.QUEUE;
-import static com.example.util.logging.LogLevel.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static com.example.model.RunMode.*;
+import static com.example.util.logging.LogLevel.DEBUG;
+import static com.example.util.logging.LogLevel.ERROR;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MainTest {
 
     @Test
+    @Disabled
     void publish_test() throws IOException, InterruptedException {
         Main main = new Main(9979, "localhost", DEBUG, 2, new Element[]{ABC, XYZ, LMN}, 50);
         main.start();
@@ -35,20 +36,25 @@ class MainTest {
 
     @Test
     void listen_test_direct_publish() throws IOException, InterruptedException {
-        int port = 4445;
-        int timeoutInSeconds = 30;
-        new Thread(() -> startApp(port, timeoutInSeconds, DIRECT)).start();
-
-        startListenerAndMeasureLatency(port, timeoutInSeconds);
+        runTest(4445, DIRECT, 40);
     }
 
     @Test
     void listen_test_queue_publish() throws IOException, InterruptedException {
-        int port = 4445;
-        int timeoutInSeconds = 30;
-        new Thread(() -> startApp(port, timeoutInSeconds, QUEUE)).start();
+        runTest(4446, QUEUE, 6);
+    }
 
-        startListenerAndMeasureLatency(port, timeoutInSeconds);
+    @Test
+    void listen_test_Lmax_publish() throws IOException, InterruptedException {
+        runTest(4447, LMAX, 7);
+    }
+
+    private void runTest(int port, RunMode runMode, int allowedLatency) throws IOException, InterruptedException {
+        //int port = 4445;
+        int timeoutInSeconds = 30;
+        new Thread(() -> startApp(port, timeoutInSeconds, runMode)).start();
+
+        startListenerAndMeasureLatency(port, timeoutInSeconds, allowedLatency);
     }
 
     private void startApp(int port, int timeoutInSeconds, RunMode runMode) {
@@ -64,7 +70,7 @@ class MainTest {
         }
     }
 
-    private void startListenerAndMeasureLatency(int port, int timeoutInSeconds) throws IOException, InterruptedException {
+    private void startListenerAndMeasureLatency(int port, int timeoutInSeconds, int allowedLatency) throws IOException, InterruptedException {
         DatagramChannel channel = DatagramChannel.open();
         channel.socket().bind(new InetSocketAddress("localhost", port));
 
@@ -90,7 +96,7 @@ class MainTest {
                         long publishedTIme = Long.parseLong(s.split("publishedTime:")[1].split("}")[0]);
                         long latency = receivedTime - publishedTIme;
                         latencyList.add(latency);
-                        System.out.println(receivedTime + " :: " + s + " :: " + latency);
+                        //System.out.println(receivedTime + " :: " + s + " :: " + latency);
                     });
                 }
             } catch (IOException e) {
@@ -111,6 +117,6 @@ class MainTest {
         System.out.println("===========================");
 
         assertTrue(averageLatency.isPresent());
-        assertTrue(averageLatency.getAsDouble() < 1);
+        assertTrue(averageLatency.getAsDouble() < allowedLatency);
     }
 }
