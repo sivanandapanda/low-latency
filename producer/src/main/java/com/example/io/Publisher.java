@@ -11,7 +11,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Publisher {
@@ -19,7 +21,7 @@ public abstract class Publisher {
     protected static final AtomicLong totalPublishedCounter = new AtomicLong(0);
     protected static final Map<String, AtomicLong> counterMap = new ConcurrentHashMap<>();
 
-    //private static final Random random = new Random();
+    private static final Random random = new Random();
 
     private final int port;
     private final String host;
@@ -52,7 +54,7 @@ public abstract class Publisher {
 
             totalPublishedCounter.incrementAndGet();
 
-            //TimeUnit.MILLISECONDS.sleep(random.nextInt(10));
+            TimeUnit.MILLISECONDS.sleep(random.nextInt(10));
         } catch (Throwable e) {
             logger.error(LocalDateTime.now(), "Exception occurred while retrieving data from queue", e);
         }

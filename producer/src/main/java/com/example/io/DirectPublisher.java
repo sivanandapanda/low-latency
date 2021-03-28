@@ -13,4 +13,8 @@ public class DirectPublisher extends Publisher {
     @Override
     public void start() {}
 
+    @Override
+    public synchronized void publish(String data) {
+        super.publish(data);
+    }
 }

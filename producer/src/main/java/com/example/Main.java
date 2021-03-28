@@ -14,6 +14,7 @@ import com.example.util.logging.Logger;
 import com.example.util.metrics.MetricsCollector;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.EventHandlerGroup;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -71,7 +72,14 @@ public class Main {
                 Producer producer1 = new DirectProducer(logger, frequencyInSec, definition, publisher);
                 Producer producer2 = new DirectProducer(logger, frequencyInSec, definition, publisher);
                 Producer producer3 = new DirectProducer(logger, frequencyInSec, definition, publisher);
-                producers = Arrays.asList(producer1, producer2, producer3);
+                Producer producer4 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                Producer producer5 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                Producer producer6 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                Producer producer7 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                Producer producer8 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                Producer producer9 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                Producer producer10 = new DirectProducer(logger, frequencyInSec, definition, publisher);
+                producers = Arrays.asList(producer1, producer2, producer3, producer4, producer5, producer6, producer7, producer8, producer9, producer10);
                 break;
             case QUEUE:
                 BlockingQueue<String> queue = new ArrayBlockingQueue<>(publishQueueCapacity);
@@ -79,17 +87,32 @@ public class Main {
                 producer1 = new QueueProducer(logger, frequencyInSec, definition, queue);
                 producer2 = new QueueProducer(logger, frequencyInSec, definition, queue);
                 producer3 = new QueueProducer(logger, frequencyInSec, definition, queue);
-                producers = Arrays.asList(producer1, producer2, producer3);
+                producer4 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producer5 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producer6 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producer7 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producer8 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producer9 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producer10 = new QueueProducer(logger, frequencyInSec, definition, queue);
+                producers = Arrays.asList(producer1, producer2, producer3, producer4, producer5, producer6, producer7, producer8, producer9, producer10);
                 break;
             case LMAX:
                 Disruptor<ValueEvent<String>> disruptor = LmaxUtils.createDisruptor();
                 publisher = new LmaxPublisher(port, hostname, logger);
-                disruptor.handleEventsWith(((LmaxPublisher)publisher).getEventHandler());
+                EventHandlerGroup<ValueEvent<String>> group = disruptor.handleEventsWith(((LmaxPublisher) publisher).getEventHandler());
+
                 RingBuffer<ValueEvent<String>> ringBuffer = disruptor.start();
                 producer1 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
                 producer2 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
                 producer3 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
-                producers = Arrays.asList(producer1, producer2, producer3);
+                producer4 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producer5 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producer6 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producer7 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producer8 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producer9 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producer10 = new LmaxProducer(logger, frequencyInSec, definition, ringBuffer);
+                producers = Arrays.asList(producer1, producer2, producer3, producer4, producer5, producer6, producer7, producer8, producer9, producer10);
                 break;
         }
 

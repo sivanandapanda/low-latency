@@ -20,13 +20,11 @@ public class DirectProducer extends Producer {
     }
 
     @Override
-    public void publish(String json) {
+    public void publish(String json) throws InterruptedException {
         try {
             LOCK.lock();
             TimeUnit.MILLISECONDS.sleep(RANDOM.nextInt(10));
             publisher.publish(json);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         } finally {
             LOCK.unlock();
         }
